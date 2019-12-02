@@ -5,7 +5,8 @@ import {
   Bind,
   Dispatch,
   UseStateInitial,
-  UseStateOpts
+  UseStateOpts,
+  UseInputOpts
 } from './type';
 
 
@@ -20,9 +21,7 @@ import {
  * @return 未经修饰的onchange函数
  * @return object 生成一个key为value,onChange的对象，方便和antd组件直接使用
  */
-interface UseInputOpts extends UseStateOpts {
-  regxFn?: (opts: any) => string;
-}
+
 const regxDefaultFn = (str: string) => str;
 const regxTextAreaDefaultFn = (str: string) => str;
 export const useInputState = (
