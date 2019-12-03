@@ -1,11 +1,11 @@
 
 import typescript from 'rollup-plugin-typescript2';
 import commonjs from 'rollup-plugin-commonjs';
-import copy from 'rollup-plugin-cpy';
 import external from 'rollup-plugin-peer-deps-external';
 import resolve from 'rollup-plugin-node-resolve';
 import url from 'rollup-plugin-url';
 import {uglify} from 'rollup-plugin-uglify'
+
 
 import pkg from './package.json';
 
@@ -14,9 +14,9 @@ export default {
   output: [
     {
       file: pkg.main,
-      format: 'cjs',
+      format: 'umd',
       exports: 'named',
-      sourcemap: false,
+      name: 'antchooks'
     },
     // {
     //   file: pkg.module,
@@ -24,6 +24,10 @@ export default {
     //   exports: 'named',
     //   sourcemap: true,
     // },
+  ],
+  external: [
+    ...Object.keys(pkg.dependencies || {}),
+    ...Object.keys(pkg.peerDependencies || {})
   ],
   plugins: [
     external(),

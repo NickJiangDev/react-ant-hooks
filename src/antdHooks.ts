@@ -1,4 +1,4 @@
-import { useCallback, useState } from './reactHooks';
+import { useCallback, useANTCState } from './reactHooks';
 import { useStaticCallback } from './utilHooks';
 import {
   argvType,
@@ -29,7 +29,7 @@ export const useInputState = (
   opts?: UseInputOpts
 ): [UseStateInitial, Dispatch, Bind, Dispatch] => {
   const { regxFn = regxDefaultFn, ...props } = opts || {};
-  const [value, setValue] = useState(initial, props);
+  const [value, setValue] = useANTCState(initial, props);
   const onChange = useCallback(
     (e: any) => setValue(regxFn(e.target.value)),
     []
@@ -42,7 +42,7 @@ export const useTextAreaState = (
   opts?: UseInputOpts
 ): [UseStateInitial, Dispatch, Bind, Dispatch] => {
   const { regxFn = regxTextAreaDefaultFn, ...props } = opts || {};
-  const [value, setValue] = useState(initial, props);
+  const [value, setValue] = useANTCState(initial, props);
   const onChange = useCallback(
     (e: any) => setValue(regxFn(e.target.value)),
     []
@@ -63,8 +63,8 @@ export const useSelectState = (
   initial: UseStateInitial,
   opts?: UseStateOpts
 ): [UseStateInitial, Dispatch, Bind, argvType] => {
-  const [value, setValue] = useState(initial, opts);
-  const [argvs, setArgv] = useState(undefined);
+  const [value, setValue] = useANTCState(initial, opts);
+  const [argvs, setArgv] = useANTCState(undefined);
   const onChange = useCallback((e: any, ...argv: any) => {
     setValue(e);
     setArgv(argv);
@@ -83,7 +83,7 @@ export const useCheckBoxState = (
   initial: UseStateInitial = [],
   opts?: UseStateOpts
 ): [UseStateInitial, Dispatch, Bind] => {
-  const [value, onChange, bind] = useState(initial, opts);
+  const [value, onChange, bind] = useANTCState(initial, opts);
   return [value, onChange, bind];
 };
 
@@ -96,7 +96,7 @@ export const useCheckBoxState = (
  * @returns openModal 打开模态框
  */
 export const useModalVisible = () => {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useANTCState(false);
   const hideModal = useStaticCallback(() => setVisible(false));
   const openModal = useStaticCallback(() => setVisible(true));
 
@@ -126,7 +126,7 @@ const initialPagination = {
   pageSize: 12
 };
 export const useTableState = (initialState?: object) => {
-  const [state, dispatch] = useState({ ...initialParams, ...initialState });
+  const [state, dispatch] = useANTCState({ ...initialParams, ...initialState });
 
   // 分页事件
   const onTablePaginationChange = useStaticCallback(
