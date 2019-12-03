@@ -1,10 +1,10 @@
 ## 什么是react-antchooks
 
-可拔插的完美兼容antd组件的hooks。
+可拔插的完美兼容antd组件的[hooks](https://zh-hans.reactjs.org/docs/hooks-intro.html)。
 
 antchook - (ant-c-hook)
 
-ant: 基于antd社区量身定做的Hooks
+ant: 基于[antd社区](https://ant.design/docs/react/introduce-cn)量身定做的Hooks
 
 c  : 包含自定义的方法Hooks
 

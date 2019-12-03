@@ -1,6 +1,6 @@
 {
   "name": "react-antchooks",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -13,7 +13,8 @@
   },
   "keywords": [
     "hooks",
-    "react"
+    "react",
+    "antd"
   ],
   "author": "Nick Jiang",
   "license": "ISC",
@@ -22,12 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NickJiangDev/CATHooks.git"
+    "url": "git+https://github.com/NickJiangDev/react-antchooks.git"
   },
   "bugs": {
-    "url": "https://github.com/NickJiangDev/CATHooks/issues"
+    "url": "https://github.com/NickJiangDev/react-antchooks/issues"
   },
-  "homepage": "https://github.com/NickJiangDev/CATHooks#readme",
+  "homepage": "https://github.com/NickJiangDev/react-antchooks#readme",
   "dependencies": {},
   "peerDependencies": {
     "react": "^16.8.3"
