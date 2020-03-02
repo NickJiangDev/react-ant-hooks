@@ -43,11 +43,11 @@ react v16.8版本以后，社区增加了hooks方法，迎来了react社区函�
 
 #### 安装
 ```node
-npm install react-antchooks
+npm install react-anthooks
 ```
 or
 ```node
-yarn add react-antchooks
+yarn add react-anthooks
 ```
 
 #### 使用
