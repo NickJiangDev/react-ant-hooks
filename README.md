@@ -1,12 +1,10 @@
-## 什么是react-antchooks
+## 什么是react-anthooks
 
 可拔插的完美兼容antd组件的[hooks](https://zh-hans.reactjs.org/docs/hooks-intro.html)。
 
-antchook - (ant-c-hook)
+anthook - (ant-hook)
 
 ant: 基于[antd社区](https://ant.design/docs/react/introduce-cn)量身定做的Hooks
-
-c  : 包含自定义的方法Hooks
 
 
 ### 背景
@@ -57,7 +55,7 @@ yarn add react-antchooks
 ```js
 import * as React from 'react';
 import { Input } from 'antd';
-import { useDidMount, useANTCState, useInputState, useStaticCallback } from "react-antchooks";
+import { useDidMount, useState, useInputState, useStaticCallback } from "react-antchooks";
 
 const App = () => {
   useDidMount(() => {
@@ -84,7 +82,7 @@ const App = () => {
 ### Hooks实例
 
 - 强化原生Hooks
-    -  [useANTCState](#useANTCState)
+    -  [useState](#useState)
     -  [useForceUpdate](#useForceUpdate)
 
 - antd组件Hooks
@@ -102,7 +100,7 @@ const App = () => {
 
 ### 描述
 
- <span id="useANTCState">useANTCState</span>
+ <span id="useState">useState</span>
 
 ```js
 
@@ -116,7 +114,7 @@ const App = () => {
  * @return onchange函数
  * @return object 生成一个key为value,onChange的对象，方便和antd组件直接使用
  */
-const [value, onChange, object] = useANTCState(initial, opts);
+const [value, onChange, object] = useState(initial, opts);
 
 react更新数据一般有3种场景
  1、通过setValue操作手动的修改值
@@ -208,6 +206,25 @@ const {state, dispatch, onTablePaginationChange, onSearch, onReload} = useTableS
  * @return object 生成一个key为value,onChange的对象，方便和antd组件直接使用
  */
 const [value, onChange, valueProps, setValue] = useSelectState(initial, opts);
+
+```
+
+ <span id="useForm">useForm</span>
+
+```js
+const {
+    getFieldDecorator,
+    getFieldError,
+    getFieldsError,
+    getFieldsValue,
+    getFieldValue,
+    resetFields,
+    setFieldsValue,
+    setFields,
+    getFieldErrorFirstMessage,
+    store,
+    error
+} = useForm();
 
 ```
 

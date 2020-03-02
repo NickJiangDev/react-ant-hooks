@@ -1,5 +1,6 @@
-import { useCallback, useANTCState } from './reactHooks';
+import { useCallback, useState, useReducer } from './reactHooks';
 import { useStaticCallback } from './utilHooks';
+import Schema from 'async-validator';
 import {
   argvType,
   Bind,
@@ -8,6 +9,7 @@ import {
   UseStateOpts,
   UseInputOpts
 } from './type';
+import React, { ReactElement } from 'react';
 
 
 /*
@@ -29,7 +31,7 @@ export const useInputState = (
   opts?: UseInputOpts
 ): [UseStateInitial, Dispatch, Bind, Dispatch] => {
   const { regxFn = regxDefaultFn, ...props } = opts || {};
-  const [value, setValue] = useANTCState(initial, props);
+  const [value, setValue] = useState(initial, props);
   const onChange = useCallback(
     (e: any) => setValue(regxFn(e.target.value)),
     []
@@ -42,7 +44,7 @@ export const useTextAreaState = (
   opts?: UseInputOpts
 ): [UseStateInitial, Dispatch, Bind, Dispatch] => {
   const { regxFn = regxTextAreaDefaultFn, ...props } = opts || {};
-  const [value, setValue] = useANTCState(initial, props);
+  const [value, setValue] = useState(initial, props);
   const onChange = useCallback(
     (e: any) => setValue(regxFn(e.target.value)),
     []
@@ -63,8 +65,8 @@ export const useSelectState = (
   initial: UseStateInitial,
   opts?: UseStateOpts
 ): [UseStateInitial, Dispatch, Bind, argvType] => {
-  const [value, setValue] = useANTCState(initial, opts);
-  const [argvs, setArgv] = useANTCState(undefined);
+  const [value, setValue] = useState(initial, opts);
+  const [argvs, setArgv] = useState(undefined);
   const onChange = useCallback((e: any, ...argv: any) => {
     setValue(e);
     setArgv(argv);
@@ -83,7 +85,7 @@ export const useCheckBoxState = (
   initial: UseStateInitial = [],
   opts?: UseStateOpts
 ): [UseStateInitial, Dispatch, Bind] => {
-  const [value, onChange, bind] = useANTCState(initial, opts);
+  const [value, onChange, bind] = useState(initial, opts);
   return [value, onChange, bind];
 };
 
@@ -96,7 +98,7 @@ export const useCheckBoxState = (
  * @returns openModal 打开模态框
  */
 export const useModalVisible = () => {
-  const [visible, setVisible] = useANTCState(false);
+  const [visible, setVisible] = useState(false);
   const hideModal = useStaticCallback(() => setVisible(false));
   const openModal = useStaticCallback(() => setVisible(true));
 
@@ -126,7 +128,7 @@ const initialPagination = {
   pageSize: 12
 };
 export const useTableState = (initialState?: object) => {
-  const [state, dispatch] = useANTCState({ ...initialParams, ...initialState });
+  const [state, dispatch] = useState({ ...initialParams, ...initialState });
 
   // 分页事件
   const onTablePaginationChange = useStaticCallback(
@@ -152,6 +154,200 @@ export const useTableState = (initialState?: object) => {
     [state]
   );
 
+
+  function reducer(state: any, action: any) {
+    switch (action.type) {
+      case 'update':
+        const { store, error } = action;
+        return {
+          store: {
+            ...state.store,
+            ...store
+          },
+          error: {
+            ...state.error,
+            ...error
+          }
+        };
+      case 'reset':
+        return initialState;
+      default:
+        return state;
+    }
+  }
+
+  interface FieldsValue {
+    [index: string]: {
+      value: string | boolean;
+      error: any;
+    };
+  }
+  
+  interface FormDefaultState {
+    store: object;
+    error: object;
+  }
+
+  interface FieldDecoratorOptions {
+    rules?: any[];
+    onChange?: (e: any) => string;
+  }
+  Schema.warning = () => {
+    // 注释掉打印
+  };
+
+  // 默认onchange事件
+const defaultOnChange = (e: any) => e.target.value;
+
+  /*
+  * form
+  */
+
+ const useForm = () => {
+  const [{ store, error }, dispatch] = useReducer(reducer, initialState);
+  // 根据id获取对应的值
+  const getFieldValue = useStaticCallback((name: string) => store[name], [
+    store
+  ]);
+  // 根据id数组获取对应的值
+  const getFieldsValue = useStaticCallback(
+    (nameArr: string[] | undefined) => {
+      if (Array.isArray(nameArr)) {
+        return nameArr.reduce((p: object, v: string) => {
+          p[v] = getFieldValue(v);
+          return p;
+        }, {});
+      } else {
+        return store;
+      }
+    },
+    [store]
+  );
+  // 根据id后去对应的错误信息的第一个message
+  const getFieldErrorFirstMessage: (
+    name: string
+  ) => string = useStaticCallback(
+    (name: string) =>
+      error[name] ? error[name][0] && error[name][0].message : '',
+    [error]
+  );
+
+  // 根据id获取对应的错误信息
+  const getFieldError = useStaticCallback((name: string) => error[name], [
+    error
+  ]);
+
+  // 根据id数组后去对应的错误信息
+  const getFieldsError = useStaticCallback(
+    (nameArr: string[] | undefined) => {
+      if (Array.isArray(nameArr)) {
+        return nameArr.reduce((p: object, v: string) => {
+          p[v] = getFieldError(v);
+          return p;
+        }, {});
+      } else {
+        return error;
+      }
+    },
+    [error]
+  );
+
+  // 重置
+  const resetFields = useStaticCallback(() => {
+    dispatch({ type: 'reset' });
+  });
+
+  // 设置一组输入控件的值和错误状态
+  const setFields = useStaticCallback(
+    (values: FieldsValue) => {
+      const fields: FormDefaultState = Object.entries(values).reduce(
+        (p: FormDefaultState, [key, field]: any) => {
+          p.store[key] = field.value;
+          p.error[key] = field.error;
+          return p;
+        },
+        {
+          store,
+          error
+        }
+      );
+      dispatch({
+        type: 'update',
+        error: fields.error,
+        store: fields.store
+      });
+    },
+    [store, error]
+  );
+
+  // 设置一组输入控件的值
+  const setFieldsValue = useStaticCallback(
+    (values: object) => {
+      dispatch({
+        type: 'update',
+        error: {},
+        store: {
+          ...store,
+          ...values
+        }
+      });
+    },
+    [store]
+  );
+  // 包裹input的HOC
+  const getFieldDecorator = (
+    name: string,
+    opts: FieldDecoratorOptions = {}
+  ) => {
+    const { onChange = defaultOnChange, rules = [], ...props } = opts;
+
+    const schema = new Schema({ [name]: rules });
+    const onChangeHandler = (e: any) => {
+      const value = onChange(e);
+      // 没有规则的时候不进行校验
+      if (Array.isArray(rules) && !rules.length) {
+        dispatch({
+          type: 'update',
+          error: { [name]: null },
+          store: { [name]: value }
+        });
+      } else {
+        schema.validate(
+          {
+            [name]: value
+          },
+          (errors: any[], fields: any[]) => {
+            dispatch({
+              type: 'update',
+              error: { [name]: errors },
+              store: { [name]: value }
+            });
+          }
+        );
+      }
+    };
+    return (Component: ReactElement) => {
+      return React.cloneElement(Component, {
+        value: store[name],
+        onChange: onChangeHandler,
+        ...props
+      });
+    };
+  };
+  return {
+    getFieldDecorator,
+    getFieldError,
+    getFieldsError,
+    getFieldsValue,
+    getFieldValue,
+    resetFields,
+    setFieldsValue,
+    setFields,
+    getFieldErrorFirstMessage,
+    store,
+    error
+  };
+};
   return {
     state,
     dispatch,

@@ -17,4 +17,4 @@ export {
   useDidUpdate
 } from './reactLifecycleHooks';
 export { useForceUpdate } from './setStateHooks';
-export { default as useANTCState } from './useState';
+export {default as useState} from './useState';
