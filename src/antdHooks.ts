@@ -130,6 +130,9 @@ const initialPagination = {
 export const useTableState = (initialState?: object) => {
   const [state, dispatch] = useState({ ...initialParams, ...initialState });
 
+  // 当前序号基数
+  const baseNo = (state.page - 1) * state.per_page;
+
   // 分页事件
   const onTablePaginationChange = useStaticCallback(
     (pageNum: number) => {
@@ -154,210 +157,219 @@ export const useTableState = (initialState?: object) => {
     [state]
   );
 
-
-  function reducer(state: any, action: any) {
-    switch (action.type) {
-      case 'update':
-        const { store, error } = action;
-        return {
-          store: {
-            ...state.store,
-            ...store
-          },
-          error: {
-            ...state.error,
-            ...error
-          }
-        };
-      case 'reset':
-        return initialState;
-      default:
-        return state;
-    }
-  }
-
-  interface FieldsValue {
-    [index: string]: {
-      value: string | boolean;
-      error: any;
-    };
-  }
-  
-  interface FormDefaultState {
-    store: object;
-    error: object;
-  }
-
-  interface FieldDecoratorOptions {
-    rules?: any[];
-    onChange?: (e: any) => string;
-  }
-  Schema.warning = () => {
-    // 注释掉打印
-  };
-
-  // 默认onchange事件
-const defaultOnChange = (e: any) => e.target.value;
-
-  /*
-  * form
-  */
-
- const useForm = () => {
-  const [{ store, error }, dispatch] = useReducer(reducer, initialState);
-  // 根据id获取对应的值
-  const getFieldValue = useStaticCallback((name: string) => store[name], [
-    store
-  ]);
-  // 根据id数组获取对应的值
-  const getFieldsValue = useStaticCallback(
-    (nameArr: string[] | undefined) => {
-      if (Array.isArray(nameArr)) {
-        return nameArr.reduce((p: object, v: string) => {
-          p[v] = getFieldValue(v);
-          return p;
-        }, {});
-      } else {
-        return store;
-      }
-    },
-    [store]
-  );
-  // 根据id后去对应的错误信息的第一个message
-  const getFieldErrorFirstMessage: (
-    name: string
-  ) => string = useStaticCallback(
-    (name: string) =>
-      error[name] ? error[name][0] && error[name][0].message : '',
-    [error]
-  );
-
-  // 根据id获取对应的错误信息
-  const getFieldError = useStaticCallback((name: string) => error[name], [
-    error
-  ]);
-
-  // 根据id数组后去对应的错误信息
-  const getFieldsError = useStaticCallback(
-    (nameArr: string[] | undefined) => {
-      if (Array.isArray(nameArr)) {
-        return nameArr.reduce((p: object, v: string) => {
-          p[v] = getFieldError(v);
-          return p;
-        }, {});
-      } else {
-        return error;
-      }
-    },
-    [error]
-  );
-
-  // 重置
-  const resetFields = useStaticCallback(() => {
-    dispatch({ type: 'reset' });
-  });
-
-  // 设置一组输入控件的值和错误状态
-  const setFields = useStaticCallback(
-    (values: FieldsValue) => {
-      const fields: FormDefaultState = Object.entries(values).reduce(
-        (p: FormDefaultState, [key, field]: any) => {
-          p.store[key] = field.value;
-          p.error[key] = field.error;
-          return p;
-        },
-        {
-          store,
-          error
-        }
-      );
-      dispatch({
-        type: 'update',
-        error: fields.error,
-        store: fields.store
-      });
-    },
-    [store, error]
-  );
-
-  // 设置一组输入控件的值
-  const setFieldsValue = useStaticCallback(
-    (values: object) => {
-      dispatch({
-        type: 'update',
-        error: {},
-        store: {
-          ...store,
-          ...values
-        }
-      });
-    },
-    [store]
-  );
-  // 包裹input的HOC
-  const getFieldDecorator = (
-    name: string,
-    opts: FieldDecoratorOptions = {}
-  ) => {
-    const { onChange = defaultOnChange, rules = [], ...props } = opts;
-
-    const schema = new Schema({ [name]: rules });
-    const onChangeHandler = (e: any) => {
-      const value = onChange(e);
-      // 没有规则的时候不进行校验
-      if (Array.isArray(rules) && !rules.length) {
-        dispatch({
-          type: 'update',
-          error: { [name]: null },
-          store: { [name]: value }
-        });
-      } else {
-        schema.validate(
-          {
-            [name]: value
-          },
-          (errors: any[], fields: any[]) => {
-            dispatch({
-              type: 'update',
-              error: { [name]: errors },
-              store: { [name]: value }
-            });
-          }
-        );
-      }
-    };
-    return (Component: ReactElement) => {
-      return React.cloneElement(Component, {
-        value: store[name],
-        onChange: onChangeHandler,
-        ...props
-      });
-    };
-  };
-  return {
-    getFieldDecorator,
-    getFieldError,
-    getFieldsError,
-    getFieldsValue,
-    getFieldValue,
-    resetFields,
-    setFieldsValue,
-    setFields,
-    getFieldErrorFirstMessage,
-    store,
-    error
-  };
-};
   return {
     state,
     dispatch,
     onTablePaginationChange,
     onSearch,
     onReload,
+    baseNo,
     pagination: {
       ...initialPagination,
       current: state.page,
       onChange: onTablePaginationChange
     }
   };
+};
+
+
+const defaultStore = {};
+const defaultError = {};
+const initialState: FormDefaultState = {
+  store: defaultStore,
+  error: defaultError,
+};
+
+function reducer(state: any, action: any) {
+  switch (action.type) {
+    case 'update':
+      const { store, error } = action;
+      return {
+        store: {
+          ...state.store,
+          ...store
+        },
+        error: {
+          ...state.error,
+          ...error
+        }
+      };
+    case 'reset':
+      return initialState;
+    default:
+      return state;
+  }
+}
+
+interface FieldsValue {
+  [index: string]: {
+    value: string | boolean;
+    error: any;
+  };
+}
+
+interface FormDefaultState {
+  store: object;
+  error: object;
+}
+
+interface FieldDecoratorOptions {
+  rules?: any[];
+  onChange?: (e: any) => string;
+}
+Schema.warning = () => {
+  // 注释掉打印
+};
+
+// 默认onchange事件
+const defaultOnChange = (e: any) => e.target.value;
+
+/*
+* form
+*/
+
+export const useForm = () => {
+const [{ store, error }, dispatch] = useReducer(reducer, initialState);
+// 根据id获取对应的值
+const getFieldValue = useStaticCallback((name: string) => store[name], [
+  store
+]);
+// 根据id数组获取对应的值
+const getFieldsValue = useStaticCallback(
+  (nameArr: string[] | undefined) => {
+    if (Array.isArray(nameArr)) {
+      return nameArr.reduce((p: object, v: string) => {
+        p[v] = getFieldValue(v);
+        return p;
+      }, {});
+    } else {
+      return store;
+    }
+  },
+  [store]
+);
+// 根据id后去对应的错误信息的第一个message
+const getFieldErrorFirstMessage: (
+  name: string
+) => string = useStaticCallback(
+  (name: string) =>
+    error[name] ? error[name][0] && error[name][0].message : '',
+  [error]
+);
+
+// 根据id获取对应的错误信息
+const getFieldError = useStaticCallback((name: string) => error[name], [
+  error
+]);
+
+// 根据id数组后去对应的错误信息
+const getFieldsError = useStaticCallback(
+  (nameArr: string[] | undefined) => {
+    if (Array.isArray(nameArr)) {
+      return nameArr.reduce((p: object, v: string) => {
+        p[v] = getFieldError(v);
+        return p;
+      }, {});
+    } else {
+      return error;
+    }
+  },
+  [error]
+);
+
+// 重置
+const resetFields = useStaticCallback(() => {
+  dispatch({ type: 'reset' });
+});
+
+// 设置一组输入控件的值和错误状态
+const setFields = useStaticCallback(
+  (values: FieldsValue) => {
+    const fields: FormDefaultState = Object.entries(values).reduce(
+      (p: FormDefaultState, [key, field]: any) => {
+        p.store[key] = field.value;
+        p.error[key] = field.error;
+        return p;
+      },
+      {
+        store,
+        error
+      }
+    );
+    dispatch({
+      type: 'update',
+      error: fields.error,
+      store: fields.store
+    });
+  },
+  [store, error]
+);
+
+// 设置一组输入控件的值
+const setFieldsValue = useStaticCallback(
+  (values: object) => {
+    dispatch({
+      type: 'update',
+      error: {},
+      store: {
+        ...store,
+        ...values
+      }
+    });
+  },
+  [store]
+);
+// 包裹input的HOC
+const getFieldDecorator = (
+  name: string,
+  opts: FieldDecoratorOptions = {}
+) => {
+  const { onChange = defaultOnChange, rules = [], ...props } = opts;
+
+  const schema = new Schema({ [name]: rules });
+  const onChangeHandler = (e: any) => {
+    const value = onChange(e);
+    // 没有规则的时候不进行校验
+    if (Array.isArray(rules) && !rules.length) {
+      dispatch({
+        type: 'update',
+        error: { [name]: null },
+        store: { [name]: value }
+      });
+    } else {
+      schema.validate(
+        {
+          [name]: value
+        },
+        (errors: any[], fields: any[]) => {
+          dispatch({
+            type: 'update',
+            error: { [name]: errors },
+            store: { [name]: value }
+          });
+        }
+      );
+    }
+  };
+  return (Component: ReactElement) => {
+    return React.cloneElement(Component, {
+      value: store[name],
+      onChange: onChangeHandler,
+      ...props
+    });
+  };
+};
+return {
+  getFieldDecorator,
+  getFieldError,
+  getFieldsError,
+  getFieldsValue,
+  getFieldValue,
+  resetFields,
+  setFieldsValue,
+  setFields,
+  getFieldErrorFirstMessage,
+  store,
+  error
+};
 };
